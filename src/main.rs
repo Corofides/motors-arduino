@@ -25,6 +25,17 @@ struct PWMControl {
 
 impl PWMControl {
     fn clear(&self) {
+        self.pin_control.clear_pins();
+    }
+    fn switch_direction(&mut self) {
+        match self.direction {
+            Direction::Forward => {
+                self.direction = Direction::Backward;
+            }
+            Direction::Backward => {
+                self.direction = Direction::Forward;
+            }
+        }
     }
     fn pulse(&self) {
         match self.direction {
@@ -49,14 +60,16 @@ struct PinControl {
 }
 
 impl PinControl {
+    pub fn clear_pins(&self) {
+        self.port.portb.write(|w| w.pb5().clear_bit());
+        self.port.portb.write(|w| w.pb4().clear_bit());
+    }
     pub fn toggle_pin(&self, output: &Output) {
         match output {
             Output::P_12 => {
-                self.port.portb.write(|w| w.pb5().clear_bit());
                 self.port.pinb.write(|w| w.pb4().set_bit());
             },
             Output::P_13 => {
-                self.port.portb.write(|w| w.pb4().clear_bit());
                 self.port.pinb.write(|w| w.pb5().set_bit());
             }
         }
@@ -76,6 +89,17 @@ fn TIMER0_OVF() {
 
 }
 
+#[avr_device::interrupt(atmega328p)]
+fn PCINT0() {
+    let cs = unsafe { CriticalSection::new() };
+
+    let mut pwm_control = PWM_CONTROL.borrow(cs).borrow_mut();
+
+    if let Some(pwm_control) = pwm_control.as_mut() {
+        pwm_control.switch_direction();
+    }
+}
+
 
 #[avr_device::entry]
 fn main() -> ! {
@@ -90,22 +114,34 @@ fn main() -> ! {
     dp.TC0.timsk0.write(|w| {
         w.toie0().set_bit()
     });
+
+    /*dp.EXINT.pcicr.write(|w| {
+        w.pcie().bits(0b001)
+    });
+
+    dp.EXINT.pcmsk0.write(|w| {
+        w.pcint().bits(0b001)
+    });*/
     
     dp.PORTB.ddrb.write(|w| {
+        w.pb0().clear_bit(); // Read; Pin 8;
         w.pb4().set_bit(); // Pin 12;
         w.pb5().set_bit()  // Pin 13;
     });
 
-    /*dp.PORTB.ddrb.write(|w| {
-        w.pb1().set_bit();
-        w.pb2().set_bit();
-        w.pb3().set_bit();
-        w.pb4().set_bit(); // Pin 12;
-        w.pb5().set_bit()  // Pin 13;
+    dp.PORTB.portb.write(|w| {
+        w.pb0().set_bit()
+    });
+
+    /*dp.EXINT.pcicr.write(|w| {
+        w.pcie().bits(0b010)
+    });
+
+    dp.EXINT.pcmsk0.write(|w| {
+        w.pcint().bits(0b010)
     });*/
 
-    //dp.PORTB.portb.write(|w| w.pb4().set_bit());
-    
+        
     avr_device::interrupt::free(|cs| {
         let pin_control = PinControl {
             port: dp.PORTB,
@@ -117,6 +153,8 @@ fn main() -> ! {
             backward_pin: Output::P_12,
             pin_control: pin_control,
         };
+
+        pwm_control.clear();
 
         PWM_CONTROL.borrow(cs).replace(Some(pwm_control));
     });
