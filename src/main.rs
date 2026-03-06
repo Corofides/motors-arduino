@@ -1,8 +1,62 @@
 #![no_std]
 #![no_main]
+#![feature(abi_avr_interrupt)]
 
 use panic_halt as _;
-use avr_device::atmega328p;
+use avr_device::atmega328p::{self, PORTB};
+use core::cell::RefCell;
+use avr_device::interrupt::{CriticalSection, Mutex};
+
+static PWM_CONTROL: Mutex<RefCell<Option<PWMControl>>> = Mutex::new(RefCell::new(None));
+
+#[derive(Default, Clone)]
+enum Direction {
+    #[default]
+    Forward,
+    Backward,
+}
+
+struct PWMControl {
+    pub direction: Direction,
+    pub forward_pin: Output,
+    pub backward_pin: Output,
+    pub pin_control: PinControl,
+}
+
+impl PWMControl {
+    fn pulse(&self) {
+        self.pin_control.toggle_pin();
+    }
+}
+
+enum Output {
+    P_12,
+    P_13,
+}
+
+struct PinControl {
+    pub port: PORTB 
+}
+
+impl PinControl {
+    pub fn toggle_pin(&self) {
+        self.port.pinb.write(|w| w.pb5().set_bit());
+    }
+}
+
+#[avr_device::interrupt(atmega328p)]
+fn TIMER0_OVF() {
+
+    let cs = unsafe { CriticalSection::new() };
+
+    let mut pwm_control = PWM_CONTROL.borrow(cs).borrow_mut();
+
+    if let Some(pwm_control) = pwm_control.as_mut() {
+        pwm_control.pulse();
+    }
+
+}
+
 
 #[avr_device::entry]
 fn main() -> ! {
@@ -10,17 +64,40 @@ fn main() -> ! {
 
     let dp = atmega328p::Peripherals::take().unwrap();
     
-    dp.PORTB.ddrb.write(|w| w.pb5().set_bit());
-    dp.PORTB.portb.write(|w| w.pb5().set_bit());
+    dp.TC0.tccr0b.write(|w| {
+        w.cs0().prescale_1024()
+    });
 
-    loop {
+    dp.TC0.timsk0.write(|w| {
+        w.toie0().set_bit()
+    });
+    
+    dp.PORTB.ddrb.write(|w| {
+        w.pb1().set_bit();
+        w.pb2().set_bit();
+        w.pb3().set_bit();
+        w.pb4().set_bit(); // Pin 12;
+        w.pb5().set_bit()  // Pin 13;
+    });
+    
+    avr_device::interrupt::free(|cs| {
+        let pin_control = PinControl {
+            port: dp.PORTB,
+        };
 
-        number = number.wrapping_add(1);
+        let pwm_control = PWMControl {
+            direction: Direction::Forward,
+            forward_pin: Output::P_13,
+            backward_pin: Output::P_12,
+            pin_control: pin_control,
+        };
 
-        dp.PORTB.portb.write(|w| w.pb5().clear_bit());
+        PWM_CONTROL.borrow(cs).replace(Some(pwm_control));
+    });
 
-        if number < (i32::MAX / 2) {
-            dp.PORTB.portb.write(|w| w.pb5().set_bit());
-        }
+    unsafe {
+        avr_device::interrupt::enable();
     }
+    
+    loop { /* Do Nothing */ }
 }
