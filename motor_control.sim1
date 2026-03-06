@@ -1,0 +1,55 @@
+<circuit version="1.1.0-SR1" rev="2005" stepSize="1000000" stepsPS="1000000" NLsteps="100000" reaStep="1000000" animate="0" >
+
+<item itemtype="Subcircuit" CircId="L298P-3" mainComp="false" Show_id="true" Show_Val="false" Pos="-228,-356" rotation="0" hflip="1" vflip="1" label="L298P-3" idLabPos="0,-20" labelrot="0" valLabPos="-16,20" valLabRot="0" Input_High_V="2.5 V" Input_Low_V="2.5 V" Input_Imped="1e+09 Ω" Out_High_V="5 V" Out_Low_V="0 V" Out_Imped="40 Ω" Tpd_ps="10 ns" Tr_ps="3 ns" Tf_ps="4 ns" Logic_Symbol="true" />
+
+<item itemtype="Ground" CircId="Ground-7" mainComp="false" Show_id="false" Show_Val="false" Pos="-188,-204" rotation="0" hflip="1" vflip="1" label="Ground-7" idLabPos="-16,8" labelrot="0" valLabPos="-16,20" valLabRot="0" />
+
+<item itemtype="Subcircuit" CircId="Uno-12" mainComp="false" Show_id="true" Show_Val="false" Pos="-476,-288" rotation="0" hflip="1" vflip="1" label="Uno-12" idLabPos="0,-20" labelrot="0" valLabPos="-16,20" valLabRot="0" Logic_Symbol="false">
+<mainCompProps MainCompId="mega328-109" Frequency="16 MHz" Auto_Load="false" saveEepr="true" MainMcu="false" SerialMon="-1" />
+</item>
+
+<item itemtype="DcMotor" CircId="DcMotor-13" mainComp="false" Show_id="true" Show_Val="false" Pos="-76,-348" rotation="0" hflip="1" vflip="1" label="DcMotor-13" idLabPos="-22,-48" labelrot="0" valLabPos="-14,36" valLabRot="0" RPM_Nominal="60 _RPM" Volt_Nominal="5 V" Resistance="100 Ω" />
+
+<item itemtype="Fixed Voltage" CircId="Fixed Voltage-14" mainComp="false" ShowProp="Voltage" Show_id="false" Show_Val="true" Pos="-252,-156" rotation="0" hflip="1" vflip="1" label="Fixed Voltage-14" idLabPos="-64,-24" labelrot="0" valLabPos="-16,8" valLabRot="0" Voltage="12 V" Out="true" />
+
+<item itemtype="Node" CircId="Node-4" mainComp="false" Pos="-188,-300" />
+
+<item itemtype="Node" CircId="Node-8" mainComp="false" Pos="-188,-292" />
+
+<item itemtype="Node" CircId="Node-9" mainComp="false" Pos="-236,-300" />
+
+<item itemtype="Node" CircId="Node-10" mainComp="false" Pos="-188,-252" />
+
+<item itemtype="Node" CircId="Node-15" mainComp="false" Pos="-236,-252" />
+
+<item itemtype="Connector" uid="Connector-4" startpinid="L298P-3-Vs" endpinid="Node-4-0" pointList="-188,-308,-188,-300" />
+
+<item itemtype="Connector" uid="Connector-5" startpinid="Node-4-2" endpinid="L298P-3-SenA" pointList="-188,-300,-188,-300" />
+
+<item itemtype="Connector" uid="Connector-11" startpinid="Node-4-1" endpinid="Node-8-0" pointList="-188,-300,-188,-292" />
+
+<item itemtype="Connector" uid="Connector-12" startpinid="Node-8-2" endpinid="L298P-3-SenB" pointList="-188,-292,-188,-292" />
+
+<item itemtype="Connector" uid="Connector-14" startpinid="L298P-3-EnA" endpinid="Node-9-0" pointList="-236,-308,-236,-300" />
+
+<item itemtype="Connector" uid="Connector-15" startpinid="Node-9-2" endpinid="L298P-3-EnB" pointList="-236,-300,-236,-300" />
+
+<item itemtype="Connector" uid="Connector-16" startpinid="Node-8-1" endpinid="Node-10-0" pointList="-188,-292,-188,-252" />
+
+<item itemtype="Connector" uid="Connector-17" startpinid="Node-10-2" endpinid="Ground-7-Gnd" pointList="-188,-252,-188,-220" />
+
+<item itemtype="Connector" uid="Connector-18" startpinid="Uno-12-13" endpinid="L298P-3-IN1" pointList="-468,-160,-492,-160,-492,-348,-236,-348" />
+
+<item itemtype="Connector" uid="Connector-19" startpinid="Uno-12-12" endpinid="L298P-3-IN2" pointList="-468,-168,-484,-168,-484,-340,-236,-340" />
+
+<item itemtype="Connector" uid="Connector-20" startpinid="L298P-3-OUT1" endpinid="DcMotor-13-lPin" pointList="-188,-348,-116,-348" />
+
+<item itemtype="Connector" uid="Connector-21" startpinid="DcMotor-13-rPin" endpinid="L298P-3-OUT2" pointList="-36,-348,-36,-308,-156,-308,-156,-340,-188,-340" />
+
+<item itemtype="Connector" uid="Connector-22" startpinid="Fixed Voltage-14-outnod" endpinid="Node-15-1" pointList="-236,-156,-236,-252" />
+
+<item itemtype="Connector" uid="Connector-23" startpinid="Node-9-1" endpinid="Node-15-0" pointList="-236,-300,-236,-252" />
+
+<item itemtype="Connector" uid="Connector-24" startpinid="Node-15-2" endpinid="Node-10-1" pointList="-236,-252,-188,-252" />
+
+</circuit>
