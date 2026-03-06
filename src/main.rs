@@ -52,7 +52,7 @@ impl PinControl {
     pub fn toggle_pin(&self, output: &Output) {
         match output {
             Output::P_12 => {
-                self.port.pinb.write(|w| w.pb5().clear_bit());
+                self.port.portb.write(|w| w.pb5().clear_bit());
                 self.port.pinb.write(|w| w.pb4().set_bit());
             },
             Output::P_13 => {
@@ -92,9 +92,6 @@ fn main() -> ! {
     });
     
     dp.PORTB.ddrb.write(|w| {
-        w.pb1().set_bit();
-        w.pb2().set_bit();
-        w.pb3().set_bit();
         w.pb4().set_bit(); // Pin 12;
         w.pb5().set_bit()  // Pin 13;
     });
@@ -115,7 +112,7 @@ fn main() -> ! {
         };
 
         let pwm_control = PWMControl {
-            direction: Direction::Backward,
+            direction: Direction::Forward,
             forward_pin: Output::P_13,
             backward_pin: Output::P_12,
             pin_control: pin_control,
