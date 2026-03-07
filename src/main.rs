@@ -89,6 +89,8 @@ fn TIMER0_OVF() {
 
 }
 
+// Remove interrupt for now.
+/*
 #[avr_device::interrupt(atmega328p)]
 fn PCINT0() {
     let cs = unsafe { CriticalSection::new() };
@@ -99,6 +101,7 @@ fn PCINT0() {
         pwm_control.switch_direction();
     }
 }
+*/
 
 
 #[avr_device::entry]
@@ -159,9 +162,30 @@ fn main() -> ! {
         PWM_CONTROL.borrow(cs).replace(Some(pwm_control));
     });
 
-    unsafe {
+    // Disable all interrupts for testing.
+    /*unsafe {
         avr_device::interrupt::enable();
-    }
+    }*/
     
-    loop { /* Do Nothing */ }
+    loop { 
+
+        avr_device::interrupt::free(|cs| {
+
+            let mut pwm_control = PWM_CONTROL.borrow(cs).borrow_mut();
+
+            if let Some(pwm_control) = pwm_control.as_mut() {
+                let pin_control = &pwm_control.pin_control;
+                let is_high = pin_control.port.pinb.read().pb0().bit_is_set();
+
+                if !is_high {
+                    pin_control.port.portb.write(|w| w.pb5().set_bit());
+                } else {
+                    pin_control.port.portb.write(|w| w.pb5().clear_bit());
+                }
+            }
+
+        });
+
+        
+    }
 }
