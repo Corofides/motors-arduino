@@ -8,6 +8,7 @@ use core::cell::RefCell;
 use avr_device::interrupt::{CriticalSection, Mutex};
 
 static PWM_CONTROL: Mutex<RefCell<Option<PWMControl>>> = Mutex::new(RefCell::new(None));
+static BUTTON_CAN_PRESS: Mutex<RefCell<bool>> = Mutex::new(RefCell::new(true));
 
 #[derive(Default, Clone)]
 enum Direction {
@@ -28,12 +29,23 @@ impl PWMControl {
         self.pin_control.clear_pins();
     }
     fn switch_direction(&mut self) {
+        self.pin_control.clear_pins();
         match self.direction {
             Direction::Forward => {
                 self.direction = Direction::Backward;
             }
             Direction::Backward => {
                 self.direction = Direction::Forward;
+            }
+        }
+    }
+    fn set_direction(&mut self, direction: &Direction) {
+        match direction {
+            Direction::Forward => {
+                self.direction = Direction::Forward;
+            },
+            Direction::Backward => {
+                self.direction = Direction::Backward;
             }
         }
     }
@@ -82,6 +94,7 @@ fn TIMER0_OVF() {
     let cs = unsafe { CriticalSection::new() };
 
     let mut pwm_control = PWM_CONTROL.borrow(cs).borrow_mut();
+    BUTTON_CAN_PRESS.borrow(cs).replace(true);
 
     if let Some(pwm_control) = pwm_control.as_mut() {
         pwm_control.pulse();
@@ -89,19 +102,33 @@ fn TIMER0_OVF() {
 
 }
 
+
 // Remove interrupt for now.
-/*
 #[avr_device::interrupt(atmega328p)]
 fn PCINT0() {
     let cs = unsafe { CriticalSection::new() };
 
     let mut pwm_control = PWM_CONTROL.borrow(cs).borrow_mut();
+    let mut button_can_press = BUTTON_CAN_PRESS.borrow(cs).borrow();
+
+    if !*button_can_press {
+        return;
+    }
 
     if let Some(pwm_control) = pwm_control.as_mut() {
+        let pin_control = &pwm_control.pin_control;
+        let is_high = pin_control.port.pinb.read().pb0().bit_is_set();
+
+        if (!is_high) {
+            return;
+        }
+
+        BUTTON_CAN_PRESS.borrow(cs).replace(false);
+
         pwm_control.switch_direction();
     }
+    
 }
-*/
 
 
 #[avr_device::entry]
@@ -132,17 +159,17 @@ fn main() -> ! {
         w.pb5().set_bit()  // Pin 13;
     });
 
-    dp.PORTB.portb.write(|w| {
+    /*dp.PORTB.portb.write(|w| {
         w.pb0().set_bit()
-    });
+    });*/
 
-    /*dp.EXINT.pcicr.write(|w| {
-        w.pcie().bits(0b010)
+    dp.EXINT.pcicr.write(|w| {
+        w.pcie().bits(0b001)
     });
 
     dp.EXINT.pcmsk0.write(|w| {
-        w.pcint().bits(0b010)
-    });*/
+        w.pcint().bits(0b001)
+    });
 
         
     avr_device::interrupt::free(|cs| {
@@ -162,30 +189,9 @@ fn main() -> ! {
         PWM_CONTROL.borrow(cs).replace(Some(pwm_control));
     });
 
-    // Disable all interrupts for testing.
-    /*unsafe {
+    unsafe {
         avr_device::interrupt::enable();
-    }*/
-    
-    loop { 
-
-        avr_device::interrupt::free(|cs| {
-
-            let mut pwm_control = PWM_CONTROL.borrow(cs).borrow_mut();
-
-            if let Some(pwm_control) = pwm_control.as_mut() {
-                let pin_control = &pwm_control.pin_control;
-                let is_high = pin_control.port.pinb.read().pb0().bit_is_set();
-
-                if !is_high {
-                    pin_control.port.portb.write(|w| w.pb5().set_bit());
-                } else {
-                    pin_control.port.portb.write(|w| w.pb5().clear_bit());
-                }
-            }
-
-        });
-
-        
     }
+    
+    loop { /* Do nothing */ }
 }
