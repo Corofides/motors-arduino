@@ -56,10 +56,10 @@
 
 <item itemtype="Connector" uid="Connector-342" startpinid="Node-98-2" endpinid="L298P-3-EnA" pointList="-308,-192,-248,-192,-248,-308,-236,-308" />
 
-<item itemtype="Connector" uid="Connector-344" startpinid="Uno-12-8" endpinid="Node-99-1" pointList="-472,-200,-492,-200,-492,-388,-428,-388" />
-
-<item itemtype="Connector" uid="Connector-345" startpinid="Push-74-pinP0" endpinid="Node-99-0" pointList="-428,-416,-428,-388" />
-
 <item itemtype="Connector" uid="Connector-346" startpinid="Node-99-2" endpinid="Resistor-96-lPin" pointList="-428,-388,-428,-364,-280,-364,-280,-264" />
+
+<item itemtype="Connector" uid="Connector-361" startpinid="Uno-12-8" endpinid="Node-99-1" pointList="-472,-200,-492,-200,-492,-388,-428,-388" />
+
+<item itemtype="Connector" uid="Connector-362" startpinid="Push-74-pinP0" endpinid="Node-99-0" pointList="-428,-416,-428,-388" />
 
 </circuit>
